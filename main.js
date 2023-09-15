@@ -1,3 +1,6 @@
+const weatherAPIKey = "7f5836ab9a144cdb6acf2229ea337de7";
+const weatherAPIURL = `https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API key}&units=metric`;
+
 const galleryImages = [
     {
         src: "./assets/gallery/image2.jpg",
@@ -73,34 +76,49 @@ let currentHour = new Date().getHours();
 let greetingText;  
 
 if (currentHour < 12){
-    greetingText = "Bom dia!";
+    greetingText = "Good morning!";
 } else if(currentHour < 19){
-    greetingText ="Boa tarde!" ;
+    greetingText ="Good afternoon!" ;
 } else if(currentHour < 24){
-    greetingText="Boa noite";
+    greetingText="Goodnight";
 } else{
-    greetingText="Bem vindo!";
+    greetingText="Welcome!";
 }
 
-
-const weatherCondiction = "Nublado";
-const userLocal = "Campo Grande";
-let temperature = 29.888;
-
-let celsiusText = `O tempo está ${weatherCondiction} em ${userLocal} e faz ${temperature.toFixed(1)}°C lá fora.`;
-let fahrText = `O tempo está ${weatherCondiction} em ${userLocal} e faz ${celsiusTofahr(temperature).toFixed(1)}°F lá fora.`;
-
 document.querySelector("#greeting").innerHTML = greetingText;
-document.querySelector("p#weather").innerHTML = celsiusText;
 
-document.querySelector(".weather-group").addEventListener("click", function(e){
+}
+//Weather Text
+function weatherHandler(){
+    navigator.geolocation.getCurrentPosition(position=> {
+        let latitude = position.coords.latitude;
+        let longitude = position.coords.longitude;
+        let url = weatherAPIURL
+            .replace("{lat}",latitude)
+            .replace("{lon}",longitude)
+            .replace("{API key}",weatherAPIKey)
+        fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const condition = data.weather[0].description; // Preciso corrigir aqui para mudar a condição do clima 
+            const location = data.name;
+            const temperature = data.main.temp;
+                
+            let celsiusText = `The weather is ${condition} in ${location} and does ${temperature.toFixed(1)}°C out there.`;
+            let fahrText = `The weather is ${condition} in ${location} and does ${celsiusTofahr(temperature).toFixed(1)}°F out there.`;
     
-    if(e.target.id == "celsius"){
-        document.querySelector("p#weather").innerHTML = celsiusText;
-    } else if(e.target.id == "fahr"){
-        document.querySelector("p#weather").innerHTML = fahrText;
-    }
-});
+            document.querySelector("p#weather").innerHTML = celsiusText;
+    
+            document.querySelector(".weather-group").addEventListener("click", function(e){
+                
+                if(e.target.id == "celsius"){
+                    document.querySelector("p#weather").innerHTML = celsiusText;
+                } else if(e.target.id == "fahr"){
+                    document.querySelector("p#weather").innerHTML = fahrText;
+                }
+            });
+        });
+    });
 }
 function clockHandler(){
 setInterval(function(){    
@@ -197,12 +215,9 @@ function populateProducts(productList){
 }
 function productsHandler(){
     
-    let freeProducts = products.filter(function(item){
-        return !item.price || item.price <= 0;   
-    });
-    let paidProducts = products.filter(function(item){
-        return item.price > 0;   
-    });
+    let freeProducts = products.filter(item => !item.price || item.price <= 0); 
+
+    let paidProducts = products.filter(item =>  item.price > 0);
     
     populateProducts(products)
 
@@ -229,9 +244,11 @@ function footerHandler(){
     document.querySelector("footer").textContent = `© ${currentYear} - All rights reserved`;
 }
 
+
 // Page Load
 menuHandler();
 greetingHandler();
+weatherHandler();
 clockHandler();
 galleryHandler();
 productsHandler();
